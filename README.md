@@ -103,3 +103,8 @@ After starting the containers, you can access the services through the following
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/dag_orquestrador_script.png)
 
+## Bronze layer
+
+- In the bronze layer, we make a request to the API [https://api.openbrewerydb.org/breweries](https://api.openbrewerydb.org/breweries) and use pandas to save the file in a temporary directory. Ideally, the ingestion would be done in a Data Lake in a Bronze container, but in this project, I had some difficulties ingesting into HDFS.
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/bronze.png)
