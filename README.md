@@ -20,18 +20,18 @@ To optimize the time in project development, I used an existing Docker project w
   
 Clone the repository to your local machine
 ``` shell
-git clone https://github.com/aaliashraf/airflow-spark-hive-azure-docker-workflow.git
+git clone https://github.com/vitoramarante94/breweries_git.git
 ```
 
 Navigate to the Repo directory
 ``` shell
-cd airflow-spark-hive-azure-docker-workflow
+cd breweries
 ```
 
 - ### Build Docker Image
 
 ``` shell
-docker compose build
+docker-compose build
 ```
 Run the following command to generate the .env file containing the required Airflow UID 
 
@@ -42,8 +42,11 @@ echo AIRFLOW_UID=1000 > .env
 - ### Bringing Up Container Services
 
 ``` shell
-docker compose up
+docker-compose up
 ```
+
+- ### Check if the Docker services are online
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/docker_services.png)
 
 ## Accessing Services
 
@@ -89,7 +92,12 @@ After starting the containers, you can access the services through the following
 - **Dockerfile**: Dockerfiles for building custom Docker images.
 - **docker-compose.yaml**: Docker Compose file for orchestrating containers.
 
-have fun! 🚀🚀🚀
+
+## Pipeline Airflow
+
+- I created a pipeline in Airflow to perform ETL by reading from the API [https://api.openbrewerydb.org/breweries](https://api.openbrewerydb.org/breweries), loading it into a temporary bronze layer, normalizing the data for the silver layer, and finally implementing business rules in the gold layer.
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/docker_services.png)
 
 
 
