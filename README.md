@@ -108,3 +108,9 @@ After starting the containers, you can access the services through the following
 - In the bronze layer, we make a request to the API [https://api.openbrewerydb.org/breweries](https://api.openbrewerydb.org/breweries) and use pandas to save the file in a temporary directory. Ideally, the ingestion would be done in a Data Lake in a Bronze container, but in this project, I had some difficulties ingesting into HDFS.
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/bronze.png)
+
+## Silver layer
+
+- To perform the ingestion in the silver layer, I use Spark for processing and the Hive Metastore to persist the data in parquet format. In this script, I start a Spark session, define the structure of the source JSON file that is in the Bronze layer, read this file by passing the schema and transforming it into a dataframe, and finally make a change to the longitude and latitude columns to the DECIMAL format. Before writing this file to Hive, I define the table name and database, and create the database if it does not exist. After that, I save the file in parquet format.
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/silver.png)
