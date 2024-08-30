@@ -97,7 +97,9 @@ After starting the containers, you can access the services through the following
 
 - I created a pipeline in Airflow to perform ETL by reading from the API [https://api.openbrewerydb.org/breweries](https://api.openbrewerydb.org/breweries), loading it into a temporary bronze layer, normalizing the data for the silver layer, and finally implementing business rules in the gold layer.
 
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/docker_services.png)
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/airflow_orquestrador_dag.png)
 
+- Here is the Airflow DAG script to call the ingestion functions for bronze, silver, and gold layers, defining the load schedule, retries, and task execution order.
 
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/dag_orquestrador_script.png)
 
