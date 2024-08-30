@@ -134,3 +134,9 @@ After starting the containers, you can access the services through the following
 ### LOG Gold
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_gold.png)
+
+
+- In the pipeline execution logs, we can track the JSON reading and each transformation performed on the table and business view. The logs are also persisted in the repository.
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_repository.png)
+
