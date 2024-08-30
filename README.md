@@ -140,3 +140,6 @@ After starting the containers, you can access the services through the following
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_repository.png)
 
+## Conclusion and future improvements
+
+This was a very challenging project because Docker and Airflow are new tools for me, but it was very rewarding to achieve this result. Although it is far from ideal, I managed to deliver a good outcome. As a future improvement, I intend to create a Data Lake with containers to store the layers, implement try-catch for API request failures, implement Jupyter to have a clearer view of the project, adjust the orchestrator for reading Notebooks, and migrate tables to Delta Tables.
