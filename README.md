@@ -120,3 +120,17 @@ After starting the containers, you can access the services through the following
 - In the gold layer, I use Spark and Hive again, creating a dedicated database for the gold layer. The idea is that this database contains only ready-to-consume data, with aggregations, joins, and transformations. This database will store views and materializations. In the script, we read the table generated in the Silver database and create a view in the gold database, aggregating the breweries by type and country. After that, we perform a select on this view to display the result in the log.
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/gold.png)
+
+## DAG Execution
+
+### LOG Bronze
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_bronze.png)
+
+### LOG Silver
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_silver.png)
+
+### LOG Gold
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_gold.png)
