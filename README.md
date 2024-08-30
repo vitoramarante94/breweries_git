@@ -1,5 +1,5 @@
-# Foundation Workspace for Airflow, Spark, Hive, and Azure Data Lake Gen2 via Docker
-Welcome to the Foundation Workspace repository! This project aims to provide a comprehensive workspace environment for data engineering tasks involving Airflow, Spark, Hive, and Azure Data Lake Gen2. By leveraging Docker, users can easily set up a consistent environment with all necessary dependencies for their ETL (Extract, Transform, Load) workflows.
+# Breweries data pipeline
+To optimize the time in project development, I used an existing Docker project with the necessary services to create a data pipeline using Spark, Airflow, and Hive. Here is the project link: https://github.com/aaliashraf/airflow-spark-hive-azure-docker-workflow?tab=readme-ov-file
 
 ### The WorkSpace contains the following Dependencies
 
@@ -11,20 +11,8 @@ Welcome to the Foundation Workspace repository! This project aims to provide a c
 | Airflow | `apache/airflow:2.8.4-python3.10` | Base Image. See release history [here](https://hub.docker.com/layers/apache/hive/4.0.0-alpha-2/images/sha256-69e482fdcebb9e07610943b610baea996c941bb36814cf233769b8a4db41f9c1?context=explore)
 | Spark | `version 3.5.1` | `bitnami/spark:latest` See release history [here](https://hub.docker.com/r/bitnami/spark).
 | Hive | `apache/hive:4.0.0-alpha-2` | See release history [here](https://hub.docker.com/layers/apache/hive/4.0.0-alpha-2/images/sha256-69e482fdcebb9e07610943b610baea996c941bb36814cf233769b8a4db41f9c1?context=explore).
-| Azure Data Lake Gen2 | `hadoop-azure-3.3.1.jar` | The JAR must be configured during Spark Submit [here](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-azure/3.3.1).
 | Python | `3.10` | Installed using `apache/airflow:2.8.4-python3.10` Image .
 | PySpark | `version 3.5.1` | This should match the Spark version.
-
-
-## Features
-- **Dockerized Environment:** The project offers Docker containers configured with Airflow, Spark, Hive, and Azure Data Lake Gen2 dependencies, ensuring seamless setup across different platforms.
-- **Complete ETL Examples:** Explore two comprehensive ETL examples included in the repository:
-
-  - **Azure Data Lake Gen2:** Connect and perform ETL operations using PySpark, demonstrating integration with Azure Data Lake Gen2.
-  - **Local Metastore:** Work with a local metastore and perform ETL tasks using PySpark and Hive, showcasing flexibility in different data storage setups.
-
-- **Diverse DAGs:** Various types of Directed Acyclic Graphs (DAGs) are provided, incorporating Python operators and Bash operators to demonstrate different workflow configurations and task executions.
-- **Configuration Files:** Essential configuration files such as Dockerfile, Java layout, and Docker Compose files are included, simplifying setup and customization of the workspace environment.
 
 ## Getting Started
 
