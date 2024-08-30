@@ -114,3 +114,9 @@ After starting the containers, you can access the services through the following
 - To perform the ingestion in the silver layer, I use Spark for processing and the Hive Metastore to persist the data in parquet format. In this script, I start a Spark session, define the structure of the source JSON file that is in the Bronze layer, read this file by passing the schema and transforming it into a dataframe, and finally make a change to the longitude and latitude columns to the DECIMAL format. Before writing this file to Hive, I define the table name and database, and create the database if it does not exist. After that, I save the file in parquet format.
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/silver.png)
+
+## Gold layer
+
+- In the gold layer, I use Spark and Hive again, creating a dedicated database for the gold layer. The idea is that this database contains only ready-to-consume data, with aggregations, joins, and transformations. This database will store views and materializations. In the script, we read the table generated in the Silver database and create a view in the gold database, aggregating the breweries by type and country. After that, we perform a select on this view to display the result in the log.
+
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/gold.png)
