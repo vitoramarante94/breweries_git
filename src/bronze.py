@@ -9,7 +9,7 @@ def ingestao_bronze():
 
     for page in count(1):
         params = {"page": page, "per_page": per_page}
-        response = requests.get("https://api.openbrewerydb.org/breweries", params=params)
+        response = requests.get("https://api.openbrewerydb.org/v1/breweries", params=params)
         response.raise_for_status()
         page_data = response.json()
 
