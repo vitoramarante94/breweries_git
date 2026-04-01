@@ -17,15 +17,19 @@ def ingestao_silver():
         StructField("id", StringType()),
         StructField("name", StringType()),
         StructField("brewery_type", StringType()),
-        StructField("street", StringType()),
+        StructField("address_1", StringType()),
+        StructField("address_2", StringType()),
+        StructField("address_3", StringType()),
         StructField("city", StringType()),
-        StructField("state", StringType()),
+        StructField("state_province", StringType()),
         StructField("postal_code", StringType()),
         StructField("country", StringType()),
         StructField("longitude", StringType()),
         StructField("latitude", StringType()),
         StructField("phone", StringType()),
-        StructField("website_url", StringType())
+        StructField("website_url", StringType()),
+        StructField("state", StringType()),
+        StructField("street", StringType())
     ])
 
     # Convert the JSON data to a DataFrame
