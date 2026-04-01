@@ -1,11 +1,12 @@
 x-airflow-common:
   &airflow-common
   build: .
+  image: breweries-airflow:2.8.4
+  pull_policy: never
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
@@ -45,7 +46,6 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
-    image: airflow:2.8.4
     container_name: webserver
     command: webserver
     ports:
@@ -69,7 +69,6 @@ services:
 
   airflow-scheduler:
     <<: *airflow-common
-    image: airflow:2.8.4
     container_name: scheduler
     command: scheduler
     healthcheck:
@@ -89,7 +88,6 @@ services:
 
   airflow-triggerer:
     <<: *airflow-common
-    image: airflow:2.8.4
     container_name: triggerer
     command: triggerer
     healthcheck:
@@ -109,7 +107,6 @@ services:
 
   airflow-init:
     <<: *airflow-common
-    image: airflow:2.8.4
     container_name: airflow-init
     entrypoint: /bin/bash
  
@@ -205,7 +202,7 @@ services:
   ####################
 
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.1
     container_name: spark-master
     user: root 
     hostname: spark
@@ -222,7 +219,7 @@ services:
       - "7077:7077"
 
   spark-worker:
-    image: bitnami/spark
+    image: bitnami/spark:3.5.1
     container_name: spark-worker
     user: root
     environment:
@@ -238,6 +235,8 @@ services:
       - ./src:/opt/airflow/src
     ports:
       - "8082:8082"
+    depends_on:
+      - spark-master
 
 ####################
   # Jupyter
