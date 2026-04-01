@@ -36,7 +36,7 @@ docker-compose build
 Run the following command to generate the .env file containing the required Airflow UID 
 
 ``` shell
-echo AIRFLOW_UID=1000 > .env
+echo AIRFLOW_UID=50000 > .env
 ```
 
 - ### Bringing Up Container Services
