@@ -474,11 +474,6 @@ def ingestao_gold():
 +------------+---------+--------+
 ```
 
-
-- In the pipeline execution logs, we can track the JSON reading and each transformation performed on the table and business view. The logs are also persisted in the repository.
-
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_repository.png)
-
 ## Monitoring & Alerting
 
 The pipeline includes built-in monitoring at every stage to detect failures, data quality issues, and silent data loss before they reach downstream consumers.
