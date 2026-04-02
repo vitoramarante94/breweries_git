@@ -27,8 +27,8 @@ def notify_failure(context):
 
 default_args = {
     "on_failure_callback": notify_failure,
-    "retries": 3,
-    "retry_delay": timedelta(seconds=150),
+    "retries": 1,
+    "retry_delay": timedelta(seconds=15),
 }
 
 with DAG(
