@@ -56,22 +56,13 @@ After starting the containers, you can access the services through the following
 **Username:** airflow  
 **Password:** airflow
 - Go To [http://localhost:8080](http://localhost:8080)
-![image](https://github.com/aaliashraf/airflow-spark-hive-azure-docker-workflow/assets/56219554/a79ca824-72c7-4dfa-aca6-41186e0e3553)
-
-
-- Example Airflow DAG Web UI displaying a running workflow.
-![image](https://github.com/aaliashraf/airflow-spark-hive-azure-docker-workflow/assets/56219554/3fc69ff7-8c24-452f-b920-79d6c963755f)
-
-
-
-
-
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/airflow_services.png)
 
 
 ### Spark
 
 - Go To [http://localhost:8181](http://localhost:8181)
-![image](https://github.com/aaliashraf/airflow-spark-hive-azure-docker-workflow/assets/56219554/b3790ed2-d478-469f-b70c-b8628bd93c01)
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/spark_services.png)
 
 
 
@@ -105,25 +96,223 @@ After starting the containers, you can access the services through the following
 
 - Here is the Airflow DAG script to call the ingestion functions for bronze, silver, and gold layers, defining the load schedule, retries, and task execution order.
 
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/dag_orquestrador_script.png)
+```python
+import os
+import sys
+from airflow import DAG
+from airflow.utils.email import send_email
+from datetime import datetime, timedelta
+from airflow.operators.python import PythonOperator
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.bronze import ingestao_bronze
+from src.silver import ingestao_silver
+from src.gold import ingestao_gold
+from src.validations import validate_bronze, validate_silver
+
+
+def notify_failure(context):
+  task_id = context["task_instance"].task_id
+  dag_id  = context["task_instance"].dag_id
+  log_url = context["task_instance"].log_url
+  send_email(
+    to="vitoramarante.94@gmail.com",
+    subject=f"[AIRFLOW FAILURE] {dag_id} > {task_id}",
+    html_content=(
+      f"Task <b>{task_id}</b> in DAG <b>{dag_id}</b> failed after all retries.<br>"
+      f"Logs: <a href='{log_url}'>{log_url}</a>"
+    ),
+  )
+
+default_args = {
+  "on_failure_callback": notify_failure,
+  "retries": 1,
+  "retry_delay": timedelta(seconds=15),
+}
+
+with DAG(
+  'orquestrador',
+  start_date=datetime(2026, 4, 1),
+  schedule_interval='@once',
+  catchup=False,
+  default_args=default_args,
+) as dag:
+
+  ingest_bronze = PythonOperator(
+    task_id='ingestao_bronze',
+    python_callable=ingestao_bronze,
+  )
+
+  check_bronze = PythonOperator(
+    task_id='validacao_bronze',
+    python_callable=validate_bronze,
+  )
+
+  ingest_silver = PythonOperator(
+    task_id='ingestao_silver',
+    python_callable=ingestao_silver,
+  )
+
+  check_silver = PythonOperator(
+    task_id='validacao_silver',
+    python_callable=validate_silver,
+  )
+
+  ingest_gold = PythonOperator(
+    task_id='ingestao_gold',
+    python_callable=ingestao_gold,
+  )
+
+  ingest_bronze >> check_bronze >> ingest_silver >> check_silver >> ingest_gold
+```
 
 ## Bronze layer
 
 - In the bronze layer, we make paginated requests to the API [https://api.openbrewerydb.org/v1/breweries](https://api.openbrewerydb.org/v1/breweries), fetching 100 records per page and iterating until the API returns an empty page, so the full dataset is always captured regardless of size. The collected records are assembled with pandas and saved as a newline-delimited JSON file at `/tmp/breweries.json`. Ideally, the ingestion would be done in a Data Lake in a Bronze container, but in this project, I had some difficulties ingesting into HDFS.
 
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/bronze.png)
+```python
+import pandas as pd
+import requests
+from itertools import count
+
+def ingestao_bronze():
+  # Buscar dados da API com paginacao
+  per_page = 100
+  data = []
+
+  for page in count(1):
+    params = {"page": page, "per_page": per_page}
+    response = requests.get("https://api.openbrewerydb.org/v1/breweries", params=params)
+    response.raise_for_status()
+    page_data = response.json()
+
+    if not page_data:
+      break
+
+    data.extend(page_data)
+
+  # Converter a lista de dados em um DataFrame do Pandas
+  df = pd.DataFrame(data)
+
+  # Salvar o DataFrame no formato JSON
+  df.to_json("/tmp/breweries.json", orient="records", lines=True)
+```
 
 ## Silver layer
 
 - To perform the ingestion in the silver layer, I use Spark for processing and the Hive Metastore to persist the data in parquet format. In this script, I start a Spark session, define the structure of the source JSON file that is in the Bronze layer, read this file by passing the schema and transforming it into a dataframe, and finally make a change to the longitude and latitude columns to the DECIMAL format. Before writing this file to Hive, I define the table name and database, and create the database if it does not exist. After that, I save the file in parquet format.
 
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/silver.png)
+```python
+import os
+from pyspark.sql.types import StructType, StructField, StringType, DecimalType
+from pyspark.sql.functions import col
+from pyspark.sql import SparkSession
+
+def ingestao_silver():
+
+  # Keep managed table data in a writable mounted directory.
+  warehouse_root = "/opt/airflow/src/warehouse"
+  os.makedirs(warehouse_root, exist_ok=True)
+
+  # Initialize Spark session
+  spark = (
+    SparkSession.builder.appName("etl_spark_hive")
+    .config("spark.hadoop.hive.metastore.uris", "thrift://metastore:9083")
+    .config("spark.sql.warehouse.dir", warehouse_root)
+    .enableHiveSupport()
+    .getOrCreate()
+  )
+
+  schema = StructType([
+    StructField("id", StringType()),
+    StructField("name", StringType()),
+    StructField("brewery_type", StringType()),
+    StructField("address_1", StringType()),
+    StructField("address_2", StringType()),
+    StructField("address_3", StringType()),
+    StructField("city", StringType()),
+    StructField("state_province", StringType()),
+    StructField("postal_code", StringType()),
+    StructField("country", StringType()),
+    StructField("longitude", StringType()),
+    StructField("latitude", StringType()),
+    StructField("phone", StringType()),
+    StructField("website_url", StringType()),
+    StructField("state", StringType()),
+    StructField("street", StringType())
+  ])
+
+  # Convert the JSON data to a DataFrame
+  df = spark.read.schema(schema).json("/tmp/breweries.json")
+
+  decimal_type = DecimalType(18, 15)
+  df = (df.withColumn("longitude", col("longitude").cast(decimal_type))
+      .withColumn("latitude", col("latitude").cast(decimal_type))
+  )
+
+  df.show()
+
+  table = "breweries"
+  database = "silver"
+  db_path = f"{warehouse_root}/{database}.db"
+  table_path = f"{db_path}/{table}"
+
+  spark.sql(f"CREATE DATABASE IF NOT EXISTS {database} LOCATION '{db_path}'")
+
+  # Save as Hive table with explicit location to avoid permission issues in default warehouse path.
+  (
+    df.write.mode("overwrite")
+    .format("parquet")
+    .option("path", table_path)
+    .saveAsTable(f"{database}.{table}")
+  )
+
+  spark.stop()
+```
 
 ## Gold layer
 
 - In the gold layer, I use Spark and Hive again, creating a dedicated database for the gold layer. The idea is that this database contains only ready-to-consume data, with aggregations, joins, and transformations. This database will store views and materializations. In the script, we read the table generated in the Silver database and create a view in the gold database, aggregating the breweries by type and country. After that, we perform a select on this view to display the result in the log.
 
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/gold.png)
+```python
+from pyspark.sql import SparkSession
+
+def ingestao_gold():
+
+  # Initialize Spark session
+  spark = (
+    SparkSession.builder.appName("etl_spark_hive")
+    .config("spark.hadoop.hive.metastore.uris", "thrift://metastore:9083")
+    .config("spark.sql.warehouse.dir", "/opt/airflow/metastore")
+    .enableHiveSupport()
+    .getOrCreate()
+  )
+
+  source_database = "silver"
+  dest_database = "gold"
+
+  spark.sql(f"CREATE DATABASE IF NOT EXISTS {dest_database}")
+
+  query = (f'''
+  CREATE OR REPLACE VIEW {dest_database}.vw_qnt_breweries_local_type
+  AS
+  SELECT
+    brewery_type,
+    country,
+    COUNT(*) AS quantity
+  FROM
+  {source_database}.breweries
+  GROUP BY brewery_type, country
+  ORDER BY country, brewery_type;
+  ''')
+  spark.sql(query).show()
+
+  df = spark.sql(f"SELECT * FROM {dest_database}.vw_qnt_breweries_local_type")
+
+  df.show()
+
+  spark.stop()
+```
 
 ## DAG Execution
 
