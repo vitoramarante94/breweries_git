@@ -17,7 +17,7 @@ def notify_failure(context):
     dag_id  = context["task_instance"].dag_id
     log_url = context["task_instance"].log_url
     send_email(
-        to="your-team@email.com",
+        to="vitoramarante.94@gmail.com",
         subject=f"[AIRFLOW FAILURE] {dag_id} > {task_id}",
         html_content=(
             f"Task <b>{task_id}</b> in DAG <b>{dag_id}</b> failed after all retries.<br>"
@@ -33,7 +33,7 @@ default_args = {
 
 with DAG(
     'orquestrador',
-    start_date=datetime(2024, 8, 28),
+    start_date=datetime(2026, 4, 1),
     schedule_interval='@once',
     catchup=False,
     default_args=default_args,
