@@ -88,6 +88,10 @@ After starting the containers, you can access the services through the following
 - **/logs**: Airflow logs.
 - **/plugins**: Airflow plugins.
 - **/src**: Utility scripts, PySpark code, and JARs.
+  - `bronze.py` — Paginated API ingestion, saves raw JSON to `/tmp/breweries.json`.
+  - `silver.py` — PySpark job that reads the bronze JSON, casts coordinates to DECIMAL, and writes a Hive parquet table.
+  - `gold.py` — PySpark job that creates a Hive view aggregating brewery counts by type and country.
+  - `validations.py` — Data quality checks for bronze (file existence, row count, required fields) and silver (non-empty table, no NULL ids, < 5% row loss vs. bronze).
 - **/metastore**: Contains Hive database and tables locally.
 - **Dockerfile**: Dockerfiles for building custom Docker images.
 - **docker-compose.yaml**: Docker Compose file for orchestrating containers.
@@ -105,7 +109,7 @@ After starting the containers, you can access the services through the following
 
 ## Bronze layer
 
-- In the bronze layer, we make a request to the API [https://api.openbrewerydb.org/breweries](https://api.openbrewerydb.org/breweries) and use pandas to save the file in a temporary directory. Ideally, the ingestion would be done in a Data Lake in a Bronze container, but in this project, I had some difficulties ingesting into HDFS.
+- In the bronze layer, we make paginated requests to the API [https://api.openbrewerydb.org/v1/breweries](https://api.openbrewerydb.org/v1/breweries), fetching 100 records per page and iterating until the API returns an empty page, so the full dataset is always captured regardless of size. The collected records are assembled with pandas and saved as a newline-delimited JSON file at `/tmp/breweries.json`. Ideally, the ingestion would be done in a Data Lake in a Bronze container, but in this project, I had some difficulties ingesting into HDFS.
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/bronze.png)
 
@@ -127,9 +131,17 @@ After starting the containers, you can access the services through the following
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_bronze.png)
 
+### LOG Validation Bronze
+
+The `validacao_bronze` task confirms the JSON file was written correctly: it checks that the file exists, that the row count is ≥ 100, and that every row contains the required fields (`id`, `name`, `brewery_type`, `country`). The validated row count is returned so Airflow records it in the task log.
+
 ### LOG Silver
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_silver.png)
+
+### LOG Validation Silver
+
+The `validacao_silver` task queries the Hive table directly with Spark. It asserts the table is non-empty, that no `id` values are NULL, and that row loss versus the bronze file is below 5%. These checks catch silent failures such as a failed schema cast or a partial write.
 
 ### LOG Gold
 
