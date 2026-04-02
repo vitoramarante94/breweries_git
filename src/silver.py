@@ -5,7 +5,7 @@ from pyspark.sql import SparkSession
 
 def ingestao_silver():
 
-    raise RuntimeError("Failure teste")
+    #raise RuntimeError("Failure teste")
 
     # Keep managed table data in a writable mounted directory.
     warehouse_root = "/opt/airflow/src/warehouse"
