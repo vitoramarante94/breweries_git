@@ -1,14 +1,19 @@
+import os
 from pyspark.sql.types import StructType, StructField, StringType, DecimalType
 from pyspark.sql.functions import col
 from pyspark.sql import SparkSession
 
 def ingestao_silver():
 
+    # Keep managed table data in a writable mounted directory.
+    warehouse_root = "/opt/airflow/src/warehouse"
+    os.makedirs(warehouse_root, exist_ok=True)
+
     # Initialize Spark session
     spark = (
         SparkSession.builder.appName("etl_spark_hive")
         .config("spark.hadoop.hive.metastore.uris", "thrift://metastore:9083")
-        .config("spark.sql.warehouse.dir", "/opt/airflow/metastore")
+        .config("spark.sql.warehouse.dir", warehouse_root)
         .enableHiveSupport()
         .getOrCreate()
     )
@@ -46,10 +51,18 @@ def ingestao_silver():
 
     table = "breweries"
     database = "silver"
+    db_path = f"{warehouse_root}/{database}.db"
+    table_path = f"{db_path}/{table}"
 
-    spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
+    spark.sql(f"CREATE DATABASE IF NOT EXISTS {database} LOCATION '{db_path}'")
+    spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
 
-    # Save the DataFrame in Parquet format to Hive
-    df.write.mode("overwrite").format("parquet").saveAsTable(f"{database}.{table}") 
+    # Save as Hive table with explicit location to avoid permission issues in default warehouse path.
+    (
+        df.write.mode("overwrite")
+        .format("parquet")
+        .option("path", table_path)
+        .saveAsTable(f"{database}.{table}")
+    )
 
     spark.stop()
