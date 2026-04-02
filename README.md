@@ -140,6 +140,39 @@ After starting the containers, you can access the services through the following
 
 ![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/log_repository.png)
 
+## Monitoring & Alerting
+
+The pipeline includes built-in monitoring at every stage to detect failures, data quality issues, and silent data loss before they reach downstream consumers.
+
+### Pipeline Failure Alerts
+
+Every task uses an `on_failure_callback` that sends an email alert when a task exhausts all retries, including the task name, DAG name, and a direct link to the Airflow log.
+
+To enable email alerts, configure SMTP in Airflow (Admin → Connections → `smtp_default`) and update the recipient address in `dags/orquestrador.py`.
+
+### Data Quality Validation Tasks
+
+Two dedicated validation tasks run between the ingestion layers:
+
+| Task | Checks |
+|---|---|
+| `validacao_bronze` | File exists · row count ≥ 100 · required fields present (`id`, `name`, `brewery_type`, `country`) |
+| `validacao_silver` | Table non-empty · no NULL `id` values · < 5% row loss vs bronze |
+
+Validation logic lives in `src/validations.py`.
+
+### DAG Execution Order
+
+```
+ingestao_bronze → validacao_bronze → ingestao_silver → validacao_silver → ingestao_gold
+```
+
+If any validation fails the downstream tasks are blocked and an alert is fired immediately, without waiting for all retries.
+
+### Log Persistence
+
+All task logs are persisted in `./logs/` (mounted into Airflow containers) and accessible per-run in the Airflow UI at `http://localhost:8080`.
+
 ## Conclusion and future improvements
 
-This was a very challenging project because Docker and Airflow are new tools for me, but it was very rewarding to achieve this result. Although it is far from ideal, I managed to deliver a good outcome. As a future improvement, I intend to create a Data Lake with containers to store the layers, implement try-catch for API request failures, implement Jupyter to have a clearer view of the project, adjust the orchestrator for reading Notebooks, and migrate tables to Delta Tables.
+This was a very challenging project because Docker and Airflow are new tools for me, but it was very rewarding to achieve this result. Although it is far from ideal, I managed to deliver a good outcome. As a future improvement, I intend to create a Data Lake with containers to store the layers, implement Jupyter to have a clearer view of the project, adjust the orchestrator for reading Notebooks, migrate tables to Delta Tables, and integrate a dedicated data quality framework such as Great Expectations.

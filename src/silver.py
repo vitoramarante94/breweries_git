@@ -40,7 +40,6 @@ def ingestao_silver():
     # Convert the JSON data to a DataFrame
     df = spark.read.schema(schema).json("/tmp/breweries.json")
 
-    df.show()
 
     decimal_type = DecimalType(18, 15)
     df = (df.withColumn("longitude", col("longitude").cast(decimal_type))
@@ -55,7 +54,6 @@ def ingestao_silver():
     table_path = f"{db_path}/{table}"
 
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {database} LOCATION '{db_path}'")
-    spark.sql(f"DROP TABLE IF EXISTS {database}.{table}")
 
     # Save as Hive table with explicit location to avoid permission issues in default warehouse path.
     (
