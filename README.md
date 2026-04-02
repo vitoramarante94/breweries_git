@@ -56,7 +56,7 @@ After starting the containers, you can access the services through the following
 **Username:** airflow  
 **Password:** airflow
 - Go To [http://localhost:8080](http://localhost:8080)
-![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/airflow_services.png)
+![image](https://github.com/vitoramarante94/breweries_git/blob/main/imagens/airflow_service.png)
 
 
 ### Spark
